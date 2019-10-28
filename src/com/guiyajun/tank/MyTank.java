@@ -140,6 +140,8 @@ public class MyTank extends Tank {
     
     @Override
     void getDirection() {
+        Direction dirOld = dir;
+        
         if(beUp && !beDown && !beLeft && !beRight) {dir = Direction.UP;}
         else if (!beUp && beDown && !beLeft && !beRight) {dir = Direction.DOWN;}
         else if (!beUp && !beDown && beLeft && !beRight) {dir = Direction.LEFT;}
@@ -149,6 +151,12 @@ public class MyTank extends Tank {
         else if (!beUp && beDown && beLeft && !beRight) {dir = Direction.DOWN_LEFT;}
         else if (!beUp && beDown && !beLeft && beRight) {dir = Direction.DOWN_RIGHT;}
         else {dir = Direction.STOP;}
+        
+        if (dir != dirOld) {
+            Message message = new TankMoveMessage(this);
+            twc.netClient.send(message);
+        }
+        
     }
     
     /**

@@ -31,6 +31,8 @@ public class TankWarClient extends Frame {
     public Wall wallRight = new Wall(600, 150, 20, 350, this);
     /** 敌方坦克集合 */
     public List<EnemyTank> enemyTanks = new ArrayList<>();
+    /** 玩家坦克集合 */
+    public List<MyTank> tanks = new ArrayList<>();
     /** 敌方坦克打出的炮弹集合 */
     public List<Missile> missilesOfEnemyTanks = new ArrayList<>();
     /** 我方坦克打出的炮弹集合 */
@@ -118,6 +120,18 @@ public class TankWarClient extends Frame {
             }
             else {
                 enemyTanks.remove(et);
+            }
+        }
+        
+        // 画出坦克集合中所有活着的坦克并将被摧毁的坦克移除
+        for (int j=0; j<tanks.size(); j++) {
+            Tank tank = tanks.get(j);
+            
+            if (tank.getAliveOfTank()) {
+                tank.draw(g);
+            }
+            else {
+                tanks.remove(tank);
             }
         }
         

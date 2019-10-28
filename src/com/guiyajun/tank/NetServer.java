@@ -13,6 +13,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -58,6 +59,7 @@ System.out.println("A client is connect!" + socket.getInetAddress() + ":" + sock
                     + ":" + id);
                 dis = new DataInputStream(socket.getInputStream());
                 int udpPort = dis.readInt();
+System.out.println("The udpPort of the client:" + udpPort);
                 String clientIPAdress = socket.getInetAddress().getHostAddress();
                 clients.add(new Client(clientIPAdress, udpPort));
                 dos  = new DataOutputStream(socket.getOutputStream());
@@ -128,14 +130,21 @@ System.out.println("A client is connect!" + socket.getInetAddress() + ":" + sock
      */
     private class UDPServerThread implements Runnable {
         byte[] buffered = new byte[1024];
+        DatagramPacket datagramPacket = null;
         @Override
         public void run() {
             try {
-                DatagramPacket datagramPacket = new DatagramPacket(buffered, buffered.length);
+                datagramPacket = new DatagramPacket(buffered, buffered.length);
 System.out.println("The UDPServer is started at port:" + udpServerPort);
                 while (datagramSocket != null) {
                     datagramSocket.receive(datagramPacket);
-System.out.println("Get a tankmessage");
+System.out.println("Get a tankmessage from client!");
+                    for (int i=0; i<clients.size(); i++) {
+                        Client c = clients.get(i);
+                        datagramPacket.setSocketAddress(new InetSocketAddress(c.ip, c.udpPort));
+                        datagramSocket.send(datagramPacket);
+System.out.println("Send a tankmessage to client!");
+                    }
                 }
             } catch (SocketException e) {
                 e.printStackTrace();

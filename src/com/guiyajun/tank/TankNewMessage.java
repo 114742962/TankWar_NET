@@ -9,6 +9,7 @@
 package com.guiyajun.tank;
 
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -27,17 +28,19 @@ import java.net.InetSocketAddress;
  * @UpdateRemark: [说明本次修改内容]  
  * @Version:      [v1.0]
  */
-public class TankMessage {
+public class TankNewMessage implements Message{
+    private int messageType = Message.TANK_NEW_MESSAGE;  
     Tank myTank = null;
-    private DatagramSocket datagramSocket = null;
-    private String ServerIP;
-    private static int udpServerPort = Integer.parseInt(PropertiesManager.getPerproty("udpServerPort"));
+    TankWarClient twc = null;
+    private int udpServerPort = Integer.parseInt(PropertiesManager.getPerproty("udpServerPort"));
     
-    TankMessage(DatagramSocket datagramSocket, Tank myTank) {
-        this.datagramSocket = datagramSocket;
+    TankNewMessage(Tank myTank) {
         this.myTank = myTank;
     }
-
+    
+    TankNewMessage(TankWarClient twc) {
+        this.twc = twc;
+    }
     /**
     * @Title: send
     * @Description: TODO(这里用一句话描述这个方法的作用)
@@ -45,12 +48,13 @@ public class TankMessage {
     * @return void    返回类型
     * @throws
     */
-    public void send() {
+    public void send(DatagramSocket datagramSocket) {
         ByteArrayOutputStream baos = null;
         DataOutputStream dos = null;
         try {
             baos = new ByteArrayOutputStream();
             dos = new DataOutputStream(baos);
+            dos.writeInt(messageType);
             dos.writeInt(myTank.id);
             dos.writeInt(myTank.x);
             dos.writeInt(myTank.y);
@@ -68,18 +72,58 @@ public class TankMessage {
             }
         }
         byte[] buf = baos.toByteArray();
-        ServerIP = PropertiesManager.getPerproty("ServerIP");
+        String ServerIP = PropertiesManager.getPerproty("ServerIP");
 System.out.println(ServerIP);
         DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, 
             new InetSocketAddress(ServerIP, udpServerPort));
         try {
-            if (datagramSocket != null) {
-                datagramSocket.send(datagramPacket);
+            datagramSocket.send(datagramPacket);
 System.out.println("发送了一包数据");
-            }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    
+
+    /**
+    * @Title: parse
+    * @Description: 解析UDP服务端转发的消息包
+    * @param     参数 
+    * @return void    返回类型
+    * @throws
+    */
+    public void parse(DataInputStream dis) {
+        
+        try {
+            int id = dis.readInt();
+            if (myTank != null && id == myTank.id) {
+                return;
+            }
+            
+            int x = dis.readInt();
+            int y = dis.readInt();
+            Direction dir = Direction.values()[dis.readInt()];
+            boolean friendly = dis.readBoolean();
+System.out.println("messageType:" + messageType + "id:" + id + "-x:" + x + "-y:" + y + "-dir:" + dir + "-friendly:" + friendly);
+            boolean exists = false;
+            for (int i=0; i<twc.tanks.size(); i++) {
+                Tank tank = twc.tanks.get(i);
+                if (tank.id == id) {
+                    exists = true;
+                    break;
+                }
+            }
+            
+            if (exists == false) {
+                Message message = new TankNewMessage(twc.myTank);
+                twc.netClient.send(message);
+                
+                MyTank tank = new MyTank(x, y, friendly, twc);
+                tank.id = id;
+                twc.tanks.add(tank);
+            }
+            
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
