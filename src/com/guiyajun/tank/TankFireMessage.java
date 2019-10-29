@@ -1,9 +1,9 @@
 /**
-* @Title: TankMoveMessage.java
+* @Title: TankFireMessage.java
 * @Package com.guiyajun.tank
 * @Description: TODO(用一句话描述该文件做什么)
 * @author Administrator
-* @date 2019年10月28日
+* @date 2019年10月29日
 * @version V1.0
 */
 package com.guiyajun.tank;
@@ -16,29 +16,29 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 
-/**
+/**  
  * @ProjectName:  [TankWar_NET] 
- * @Package:      [com.guiyajun.tank.TankMoveMessage.java]  
- * @ClassName:    [TankMoveMessage]   
- * @Description:  [坦克移动的消息]   
- * @Author:       [桂亚君]   
- * @CreateDate:   [2019年10月28日 下午10:10:04]   
- * @UpdateUser:   [桂亚君]   
- * @UpdateDate:   [2019年10月28日 下午10:10:04]   
+ * @Package:      [com.guiyajun.tank.TankFireMessage.java]  
+ * @ClassName:    [TankFireMessage]   
+ * @Description:  [坦克开火的消息]   
+ * @Author:       [Guiyajun]   
+ * @CreateDate:   [2019年10月29日 下午2:45:00]   
+ * @UpdateUser:   [Guiyajun]   
+ * @UpdateDate:   [2019年10月29日 下午2:45:00]   
  * @UpdateRemark: [说明本次修改内容]  
  * @Version:      [v1.0]
  */
-public class TankMoveMessage implements Message {
-    private int messageType = Message.TANK_MOVE_MESSAGE;
+public class TankFireMessage implements Message {
+    private int messageType = Message.TANK_FIRE_MESSAGE;
     private int udpServerPort = Integer.parseInt(PropertiesManager.getPerproty("udpServerPort"));
     public Tank myTank = null;
     public TankWarClient twc = null;
     
-    TankMoveMessage(Tank myTank) {
+    public TankFireMessage(Tank myTank) {
         this.myTank = myTank;
     }
     
-    TankMoveMessage(TankWarClient twc) {
+    public TankFireMessage(TankWarClient twc) {
         this.twc = twc;
     }
     
@@ -51,7 +51,6 @@ public class TankMoveMessage implements Message {
             dos = new DataOutputStream(baos);
             dos.writeInt(messageType);
             dos.writeInt(myTank.id);
-            dos.writeInt(myTank.dir.ordinal());
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -64,9 +63,9 @@ public class TankMoveMessage implements Message {
             }
         }
         byte[] buf = baos.toByteArray();
-        String ServerIP = PropertiesManager.getPerproty("ServerIP");
+        String serverIP = PropertiesManager.getPerproty("ServerIP");
         DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, 
-            new InetSocketAddress(ServerIP, udpServerPort));
+            new InetSocketAddress(serverIP, udpServerPort));
         try {
             datagramSocket.send(datagramPacket);
         } catch (IOException e) {
@@ -81,16 +80,14 @@ public class TankMoveMessage implements Message {
             if (myTank != null && id == myTank.id) {
                 return;
             }
-            Direction dir = Direction.values()[dis.readInt()];
             
             for (int i=0; i<twc.tanks.size(); i++) {
                 MyTank tank = twc.tanks.get(i);
                 if (tank.id == id) {
-                    tank.dir = dir;
+                    twc.missilesOfEnemyTanks.add(tank.fire(tank.colorOfMissile, tank.dirOfBarrel));
                     break;
                 }
             }
-            
         } catch (IOException e) {
             e.printStackTrace();
         }

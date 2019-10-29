@@ -42,10 +42,12 @@ public class NetServer {
     private List<Client> clients = new ArrayList<>();
     /** 创建一个UDP服务 */
     DatagramSocket datagramSocket = null;
+    /** 主坦克*/
     
-    public static void main(String[] args) {
-        new NetServer().start();
-    }
+    
+//    public static void main(String[] args) {
+//        new NetServer().start();
+//    }
     
     public void start () {
         ServerSocket ss = null;
@@ -135,15 +137,14 @@ System.out.println("The udpPort of the client:" + udpPort);
         public void run() {
             try {
                 datagramPacket = new DatagramPacket(buffered, buffered.length);
-System.out.println("The UDPServer is started at port:" + udpServerPort);
                 while (datagramSocket != null) {
                     datagramSocket.receive(datagramPacket);
-System.out.println("Get a tankmessage from client!");
+System.out.println("Receive a message from client!");                    
                     for (int i=0; i<clients.size(); i++) {
                         Client c = clients.get(i);
                         datagramPacket.setSocketAddress(new InetSocketAddress(c.ip, c.udpPort));
+System.out.println("Send the message to others client!");                        
                         datagramSocket.send(datagramPacket);
-System.out.println("Send a tankmessage to client!");
                     }
                 }
             } catch (SocketException e) {

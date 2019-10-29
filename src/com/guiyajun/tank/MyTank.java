@@ -1,7 +1,9 @@
 package com.guiyajun.tank;
 
 import java.awt.Color;
+import java.awt.GradientPaint;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 
 /**
@@ -17,8 +19,12 @@ import java.awt.event.KeyEvent;
  * @Version:      [v1.0]
  */
 public class MyTank extends Tank {
-    /** 主坦克的颜色 */
-    public static Color COLOROFMISSILE = Color.BLUE;
+    /** 主坦克炮弹的颜色 */
+    public Color colorOfMissile = null;
+    /** 主坦克的渐变初始颜色 */
+    public Color startColor;
+    /** 主坦克的渐变结束颜色 */
+    public Color endColor;
     /** 记录左方向按键的状态，true表示按键被按压中，false表示按键被释放了 */
     private boolean beLeft = false;
     /** 记录右方向按键的状态，true表示按键被按压中，false表示按键被释放了 */
@@ -37,6 +43,19 @@ public class MyTank extends Tank {
      */
     public MyTank(int x, int y, boolean friendly, TankWarClient twc) {    // 将客户端的引用传入我方坦克
         super(x, y, friendly, twc);
+        initColor();
+    }
+    
+    private void initColor() {
+        int red = (int)(Math.random() * 255);
+        int green = (int)(Math.random() * 255);
+        int blue = (int)(Math.random() * 255);
+        startColor = new Color(red, green, blue);
+        red = (int)(Math.random() * 255);
+        green = (int)(Math.random() * 255);
+        blue = (int)(Math.random() * 255);
+        endColor = new Color(red, green, blue);
+        colorOfMissile = endColor;
     }
     
     @Override
@@ -47,10 +66,13 @@ public class MyTank extends Tank {
         
         // 定义坦克的格式
         Color c = g.getColor();
-        g.setColor(Color.GREEN);
-        g.fillOval(x, y, TANK_WIDTH, TANK_HEIGHT);
-        g.setColor(Color.DARK_GRAY);
+        Graphics2D graphics2D = (Graphics2D)g;
+        GradientPaint gradientPaint = new GradientPaint(10, 10, startColor, 32, 
+            32, endColor, true);
+        graphics2D.setPaint(gradientPaint);
+        graphics2D.fillOval(x, y, TANK_WIDTH, TANK_HEIGHT);
         
+        g.setColor(Color.DARK_GRAY);
         // 画出坦克的ID
         g.drawString("  " + this.id, x, y+50);
         // 移动坦克
@@ -113,7 +135,9 @@ public class MyTank extends Tank {
                 break;
              // F键发射炮弹    
             case KeyEvent.VK_F:
-                twc.missilesOfMyTank.add(fire(COLOROFMISSILE, dirOfBarrel));
+                Message message = new TankFireMessage(this);
+                twc.netClient.send(message);
+                twc.missilesOfMyTank.add(fire(colorOfMissile, dirOfBarrel));
                 break;
             case KeyEvent.VK_UP:
                 beUp = false;
@@ -129,7 +153,7 @@ public class MyTank extends Tank {
                 break;
             // 超级发射一次往八个方向各发射一枚炮弹
             case KeyEvent.VK_A:
-                superFire(COLOROFMISSILE);
+                superFire(colorOfMissile);
             default:
                 break; 
         }
@@ -175,8 +199,8 @@ public class MyTank extends Tank {
         Direction[] dirs = Direction.values();
         
         // 每个方向发射一枚炮弹
-        for(int i=0; i<dirs.length -1; i++) {
-            twc.missilesOfMyTank.add(fire(COLOROFMISSILE, dirs[i]));
+        for(int i=0; i<dirs.length - 1; i++) {
+            twc.missilesOfMyTank.add(fire(colorOfMissile, dirs[i]));
         }
     }
     

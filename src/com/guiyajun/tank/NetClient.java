@@ -33,7 +33,7 @@ import java.net.UnknownHostException;
  */
 public class NetClient {
     private static int TCPServerPort = Integer.parseInt(PropertiesManager.getPerproty("TCPServerPort"));
-    private static String ServerIP = PropertiesManager.getPerproty("TCPServerIP");
+    private static String ServerIP = PropertiesManager.getPerproty("ServerIP");
     private static int UDP_PORT_START = 35555;
     private int udpPort;
     public TankWarClient twc = null;
@@ -96,9 +96,7 @@ System.out.println("Connect to server and get a id:" + id);
             try {
                 DatagramPacket datagramPacket = new DatagramPacket(buffered, buffered.length);
                 while (datagramSocket != null) {
-System.out.println("Start to recieve TankMessage from server!");                    
                     datagramSocket.receive(datagramPacket);
-System.out.println("Get TankMessage from server!");                    
                     parse(datagramPacket);
                 } 
             } catch (IOException e) {
@@ -122,11 +120,18 @@ System.out.println("Get TankMessage from server!");
                 case Message.TANK_NEW_MESSAGE:
                     message = new TankNewMessage(twc);
                     message.parse(dis);
+System.out.println("Got a Tank_new_message from server!");                    
                     break;
                 case Message.TANK_MOVE_MESSAGE:
                     message = new TankMoveMessage(twc);
                     message.parse(dis);
+System.out.println("Got a Tank_move_message from server!");                    
                     break;
+                case Message.TANK_FIRE_MESSAGE:
+                    message = new TankFireMessage(twc);
+                    message.parse(dis);
+System.out.println("Got a Tank_fire_message from server!");                    
+                    break;                    
                 default:
                     break;
             }

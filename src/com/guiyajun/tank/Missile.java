@@ -147,7 +147,7 @@ public class Missile {
             this.setAliveOfMissile(false);
             
             // 主坦克被击中一次掉一点血
-            if(tank.equals(twc.myTank)) {
+            if(tank instanceof MyTank) {
                 tank.reduceBloodOfTank(1);
             } else {
                 tank.reduceBloodOfTank(4);
@@ -167,7 +167,7 @@ public class Missile {
     
     /**
     * @Title: hitEnemyTanks
-    * @Description: 判断是否击中敌方任意坦克
+    * @Description: 判断是否击中任意机器人坦克
     * @param @param enemyTanks    敌方坦克的集合
     * @return void    返回类型
     * @throws
@@ -179,6 +179,20 @@ public class Missile {
         }
     }
     
+    /**
+    * @Title: hitPlayTanks
+    * @Description: 判断是否击中其他玩家任意坦克
+    * @param @param tanks    参数 
+    * @return void    返回类型
+    * @throws
+     */
+    public void hitPlayerTanks(List<MyTank> tanks) {
+        for (int i=0; i<tanks.size(); i++) {
+            Tank et = tanks.get(i);
+            hitTank(et);
+        }
+    }
+        
     /**
     * @Title: getAliveOfMissile
     * @Description: 获取炮弹的生存状态
@@ -217,12 +231,18 @@ public class Missile {
                 aliveOfMissile = false;
                 twc.missilesOfMyTank.remove(this);
             }
-            
-            // 子弹与内墙碰撞检测
-            if (this.getRectOfMissle().intersects(twc.wallLeft.getRectOfWall()) 
-                || this.getRectOfMissle().intersects(twc.wallRight.getRectOfWall())) {
-                aliveOfMissile = false;
-                twc.missilesOfMyTank.remove(this);
+
+            // 其他玩家主坦克子弹与我方坦克碰撞
+            for (int j=0; j<twc.missilesOfEnemyTanks.size(); j++) {
+                Missile mofen = twc.missilesOfEnemyTanks.get(j);
+                Tank myTank = twc.myTank;
+                if (myTank != null && mofen != null && myTank.getAliveOfTank() 
+                    && mofen.getAliveOfMissile()) {
+                    if (myTank.getRectOfTank().intersects(mofen.getRectOfMissle())) {
+                        hitTank(myTank);
+                        mofen.setAliveOfMissile(false);
+                    }
+                }
             }
             
             // 主坦克子弹与敌方坦克子弹碰撞

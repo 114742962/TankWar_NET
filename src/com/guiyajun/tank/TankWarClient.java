@@ -73,6 +73,8 @@ public class TankWarClient extends Frame {
     * @throws
      */
     public void lauchFrame() {
+        // 创建一个服务端线程
+        ThreadPoolService.getInstance().execute(new ServerThread()); 
         netClient = new NetClient(this);
         netClient.connect();
         // 定义客户端的属性
@@ -123,9 +125,9 @@ public class TankWarClient extends Frame {
             }
         }
         
-        // 画出坦克集合中所有活着的坦克并将被摧毁的坦克移除
+        // 画出坦克集合中所有活着的玩家主坦克并将被摧毁的坦克移除
         for (int j=0; j<tanks.size(); j++) {
-            Tank tank = tanks.get(j);
+            MyTank tank = tanks.get(j);
             
             if (tank.getAliveOfTank()) {
                 tank.draw(g);
@@ -140,6 +142,7 @@ public class TankWarClient extends Frame {
             Missile m = missilesOfMyTank.get(i);
             if (m != null) {
                 m.hitEnemyTanks(enemyTanks);
+                m.hitPlayerTanks(tanks);
                 
                 if (m.getAliveOfMissile()) {
                     m.draw(g);
@@ -253,5 +256,13 @@ public class TankWarClient extends Frame {
                 }
             }
         }
+    }
+    
+    private class ServerThread implements Runnable {
+
+        public void run() {
+            new NetServer().start();
+        }
+        
     }
 }

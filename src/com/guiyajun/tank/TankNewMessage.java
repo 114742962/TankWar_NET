@@ -73,12 +73,10 @@ public class TankNewMessage implements Message{
         }
         byte[] buf = baos.toByteArray();
         String ServerIP = PropertiesManager.getPerproty("ServerIP");
-System.out.println(ServerIP);
         DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, 
             new InetSocketAddress(ServerIP, udpServerPort));
         try {
             datagramSocket.send(datagramPacket);
-System.out.println("发送了一包数据");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -95,7 +93,7 @@ System.out.println("发送了一包数据");
         
         try {
             int id = dis.readInt();
-            if (myTank != null && id == myTank.id) {
+            if (twc.myTank != null && id == twc.myTank.id) {
                 return;
             }
             
@@ -103,7 +101,7 @@ System.out.println("发送了一包数据");
             int y = dis.readInt();
             Direction dir = Direction.values()[dis.readInt()];
             boolean friendly = dis.readBoolean();
-System.out.println("messageType:" + messageType + "id:" + id + "-x:" + x + "-y:" + y + "-dir:" + dir + "-friendly:" + friendly);
+System.out.println("messageType:" + messageType + "-id:" + id + "-x:" + x + "-y:" + y + "-dir:" + dir + "-friendly:" + friendly);
             boolean exists = false;
             for (int i=0; i<twc.tanks.size(); i++) {
                 Tank tank = twc.tanks.get(i);
@@ -121,7 +119,6 @@ System.out.println("messageType:" + messageType + "id:" + id + "-x:" + x + "-y:"
                 tank.id = id;
                 twc.tanks.add(tank);
             }
-            
         } catch (IOException e) {
             e.printStackTrace();
         }

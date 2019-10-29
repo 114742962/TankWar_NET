@@ -26,6 +26,7 @@ import java.net.DatagramSocket;
 public interface Message {
     public static final int TANK_NEW_MESSAGE = 1;
     public static final int TANK_MOVE_MESSAGE = 2;
+    public static final int TANK_FIRE_MESSAGE = 3;
     
     public void send(DatagramSocket datagramSocket);
     
