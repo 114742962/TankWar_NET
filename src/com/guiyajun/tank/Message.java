@@ -27,6 +27,10 @@ public interface Message {
     public static final int TANK_NEW_MESSAGE = 1;
     public static final int TANK_MOVE_MESSAGE = 2;
     public static final int TANK_FIRE_MESSAGE = 3;
+    public static final int TANK_BARREL_MESSAGE = 4;
+    public static final int TANK_SUPER_FIRE_MESSAGE = 5;
+    public static final int TANK_EXIT_MESSAGE = 6;
+    public static final int TANK_EXIT_RECEIVED_MESSAGE = 7;
     
     public void send(DatagramSocket datagramSocket);
     

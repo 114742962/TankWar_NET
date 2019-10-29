@@ -1,9 +1,9 @@
 /**
-* @Title: TankMessage.java
+* @Title: TankExitMessage.java
 * @Package com.guiyajun.tank
 * @Description: TODO(用一句话描述该文件做什么)
 * @author Administrator
-* @date 2019年10月27日
+* @date 2019年10月29日
 * @version V1.0
 */
 package com.guiyajun.tank;
@@ -18,37 +18,30 @@ import java.net.InetSocketAddress;
 
 /**
  * @ProjectName:  [TankWar_NET] 
- * @Package:      [com.guiyajun.tank.TankMessage.java]  
- * @ClassName:    [TankMessage]   
- * @Description:  [包装坦克的消息]   
+ * @Package:      [com.guiyajun.tank.TankExitMessage.java]  
+ * @ClassName:    [TankExitMessage]   
+ * @Description:  [一句话描述该类的功能]   
  * @Author:       [桂亚君]   
- * @CreateDate:   [2019年10月27日 下午7:18:16]   
+ * @CreateDate:   [2019年10月29日 下午9:15:07]   
  * @UpdateUser:   [桂亚君]   
- * @UpdateDate:   [2019年10月27日 下午7:18:16]   
+ * @UpdateDate:   [2019年10月29日 下午9:15:07]   
  * @UpdateRemark: [说明本次修改内容]  
  * @Version:      [v1.0]
  */
-public class TankNewMessage implements Message{
-    private int messageType = Message.TANK_NEW_MESSAGE;  
+public class TankExitMessage implements Message {
+    private int messageType = Message.TANK_EXIT_MESSAGE;  
     Tank myTank = null;
     TankWarClient twc = null;
     private int UDPServerPort = Integer.parseInt(PropertiesManager.getPerproty("UDPServerPort"));
     
-    TankNewMessage(Tank myTank) {
+    TankExitMessage(Tank myTank) {
         this.myTank = myTank;
     }
     
-    TankNewMessage(TankWarClient twc) {
+    TankExitMessage(TankWarClient twc) {
         this.twc = twc;
     }
-    
-    /**
-    * @Title: send
-    * @Description: TODO(这里用一句话描述这个方法的作用)
-    * @param     参数 
-    * @return void    返回类型
-    * @throws
-    */
+    @Override
     public void send(DatagramSocket datagramSocket) {
         ByteArrayOutputStream baos = null;
         DataOutputStream dos = null;
@@ -57,10 +50,6 @@ public class TankNewMessage implements Message{
             dos = new DataOutputStream(baos);
             dos.writeInt(messageType);
             dos.writeInt(myTank.id);
-            dos.writeInt(myTank.x);
-            dos.writeInt(myTank.y);
-            dos.writeInt(myTank.dir.ordinal());
-            dos.writeBoolean(myTank.friendly);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -73,9 +62,9 @@ public class TankNewMessage implements Message{
             }
         }
         byte[] buf = baos.toByteArray();
-        String ServerIP = PropertiesManager.getPerproty("ServerIP");
+        String serverIP = PropertiesManager.getPerproty("ServerIP");
         DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, 
-            new InetSocketAddress(ServerIP, UDPServerPort));
+            new InetSocketAddress(serverIP, UDPServerPort));
         try {
             if (datagramSocket != null) {
                 datagramSocket.send(datagramPacket);
@@ -85,42 +74,23 @@ public class TankNewMessage implements Message{
         }
     }
 
-    /**
-    * @Title: parse
-    * @Description: 解析UDP服务端转发的消息包
-    * @param     参数 
-    * @return void    返回类型
-    * @throws
-    */
+    @Override
     public void parse(DataInputStream dis) {
-        
         try {
             int id = dis.readInt();
-            if (twc.myTank != null && id == twc.myTank.id) {
+            if (myTank != null && id == myTank.id) {
                 return;
             }
-            int x = dis.readInt();
-            int y = dis.readInt();
-            Direction dir = Direction.values()[dis.readInt()];
-            boolean friendly = dis.readBoolean();
-            boolean exists = false;
+            
             for (int i=0; i<twc.tanks.size(); i++) {
-                Tank tank = twc.tanks.get(i);
+                MyTank tank = twc.tanks.get(i);
                 if (tank.id == id) {
-                    exists = true;
+                    tank.setAliveOfTank(false);
+                    twc.tanks.remove(tank);
+                    Message message = new TankExitRecievedMessage(id, twc);
+                    twc.netClient.send(message);
                     break;
                 }
-            }
-            
-            if (exists == false) {
-                Message message = new TankNewMessage(twc.myTank);
-                twc.netClient.send(message);
-System.out.println("Got a Tank_new_message from server!");
-System.out.println("messageType:" + messageType + "-id:" + id + "-x:" + x + "-y:" + y 
-    + "-dir:" + dir + "-friendly:" + friendly);
-                MyTank tank = new MyTank(x, y, friendly, twc);
-                tank.id = id;
-                twc.tanks.add(tank);
             }
         } catch (IOException e) {
             e.printStackTrace();

@@ -11,6 +11,7 @@ package com.guiyajun.tank;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.BindException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
@@ -36,7 +37,7 @@ public class NetServer {
     /** 坦克的编号，每加入一个坦克增加1 */
     private static int id = 100;
     /** UDP端口号 */
-    private static int udpServerPort = Integer.parseInt(PropertiesManager.getPerproty("udpServerPort"));
+    private static int UDPServerPort = Integer.parseInt(PropertiesManager.getPerproty("UDPServerPort"));
     /** 从配置文件中读取服务端TCP端口号 */
     private static int TCPServerPort = Integer.parseInt(PropertiesManager.getPerproty("TCPServerPort"));
     private List<Client> clients = new ArrayList<>();
@@ -68,12 +69,14 @@ System.out.println("The udpPort of the client:" + udpPort);
                 dos.writeInt(id++);
                 dos.flush();
                 
-                datagramSocket = new DatagramSocket(udpServerPort);
+                datagramSocket = new DatagramSocket(UDPServerPort);
                 
                 // 启动UDP服务线程池
                 ThreadPoolService.getInstance().execute(new UDPServerThread()); 
                 
             }
+        } catch (BindException e) {
+            System.out.println("The server is already started on port:" + TCPServerPort);
         } catch (SocketException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -139,11 +142,9 @@ System.out.println("The udpPort of the client:" + udpPort);
                 datagramPacket = new DatagramPacket(buffered, buffered.length);
                 while (datagramSocket != null) {
                     datagramSocket.receive(datagramPacket);
-System.out.println("Receive a message from client!");                    
                     for (int i=0; i<clients.size(); i++) {
                         Client c = clients.get(i);
                         datagramPacket.setSocketAddress(new InetSocketAddress(c.ip, c.udpPort));
-System.out.println("Send the message to others client!");                        
                         datagramSocket.send(datagramPacket);
                     }
                 }

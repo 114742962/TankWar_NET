@@ -30,7 +30,7 @@ import java.net.InetSocketAddress;
  */
 public class TankMoveMessage implements Message {
     private int messageType = Message.TANK_MOVE_MESSAGE;
-    private int udpServerPort = Integer.parseInt(PropertiesManager.getPerproty("udpServerPort"));
+    private int UDPServerPort = Integer.parseInt(PropertiesManager.getPerproty("UDPServerPort"));
     public Tank myTank = null;
     public TankWarClient twc = null;
     
@@ -51,6 +51,8 @@ public class TankMoveMessage implements Message {
             dos = new DataOutputStream(baos);
             dos.writeInt(messageType);
             dos.writeInt(myTank.id);
+            dos.writeInt(myTank.x);
+            dos.writeInt(myTank.y);
             dos.writeInt(myTank.dir.ordinal());
         } catch (IOException e) {
             e.printStackTrace();
@@ -66,9 +68,11 @@ public class TankMoveMessage implements Message {
         byte[] buf = baos.toByteArray();
         String ServerIP = PropertiesManager.getPerproty("ServerIP");
         DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, 
-            new InetSocketAddress(ServerIP, udpServerPort));
+            new InetSocketAddress(ServerIP, UDPServerPort));
         try {
-            datagramSocket.send(datagramPacket);
+            if (datagramSocket != null) {
+                datagramSocket.send(datagramPacket);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -81,12 +85,16 @@ public class TankMoveMessage implements Message {
             if (myTank != null && id == myTank.id) {
                 return;
             }
+            int x = dis.readInt();
+            int y = dis.readInt();
             Direction dir = Direction.values()[dis.readInt()];
             
             for (int i=0; i<twc.tanks.size(); i++) {
                 MyTank tank = twc.tanks.get(i);
                 if (tank.id == id) {
                     tank.dir = dir;
+                    tank.x = x;
+                    tank.y = y;
                     break;
                 }
             }

@@ -12,6 +12,7 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.BindException;
 import java.net.ConnectException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -32,10 +33,9 @@ import java.net.UnknownHostException;
  * @Version:      [v1.0]
  */
 public class NetClient {
-    private static int TCPServerPort = Integer.parseInt(PropertiesManager.getPerproty("TCPServerPort"));
-    private static String ServerIP = PropertiesManager.getPerproty("ServerIP");
-    private static int UDP_PORT_START = 35555;
-    private int udpPort;
+    public static int TCPServerPort = Integer.parseInt(PropertiesManager.getPerproty("TCPServerPort"));
+    public static String serverIP = PropertiesManager.getPerproty("ServerIP");
+    public static int UDPClientPort = 35554;
     public TankWarClient twc = null;
     private DatagramSocket datagramSocket = null;
     
@@ -48,9 +48,9 @@ public class NetClient {
         DataOutputStream dos = null;
         DataInputStream dis = null;
         try {
-            socket = new Socket(ServerIP, TCPServerPort);
+            socket = new Socket(serverIP, TCPServerPort);
             dos = new DataOutputStream(socket.getOutputStream());
-            dos.writeInt(UDP_PORT_START);
+            dos.writeInt(UDPClientPort);
             dis = new DataInputStream(socket.getInputStream());
             int id = dis.readInt();
             twc.myTank.id = id;
@@ -73,7 +73,9 @@ System.out.println("Connect to server and get a id:" + id);
         }
         
         try {
-            datagramSocket = new DatagramSocket(UDP_PORT_START);
+            datagramSocket = new DatagramSocket(UDPClientPort);
+        } catch (BindException e) {
+            System.out.println("The udpPort:" + UDPClientPort +"is already be used!");
         } catch (SocketException e) {
             e.printStackTrace();
         }
@@ -120,17 +122,30 @@ System.out.println("Connect to server and get a id:" + id);
                 case Message.TANK_NEW_MESSAGE:
                     message = new TankNewMessage(twc);
                     message.parse(dis);
-System.out.println("Got a Tank_new_message from server!");                    
                     break;
                 case Message.TANK_MOVE_MESSAGE:
                     message = new TankMoveMessage(twc);
                     message.parse(dis);
-System.out.println("Got a Tank_move_message from server!");                    
                     break;
                 case Message.TANK_FIRE_MESSAGE:
                     message = new TankFireMessage(twc);
                     message.parse(dis);
-System.out.println("Got a Tank_fire_message from server!");                    
+                    break;                    
+                case Message.TANK_BARREL_MESSAGE:
+                    message = new TankBarrelMessage(twc);
+                    message.parse(dis);
+                    break;                    
+                case Message.TANK_SUPER_FIRE_MESSAGE:
+                    message = new TankSuperFireMessage(twc);
+                    message.parse(dis);
+                    break;                    
+                case Message.TANK_EXIT_MESSAGE:
+                    message = new TankExitMessage(twc);
+                    message.parse(dis);
+                    break;                    
+                case Message.TANK_EXIT_RECEIVED_MESSAGE:
+                    message = new TankExitRecievedMessage(twc.myTank);
+                    message.parse(dis);
                     break;                    
                 default:
                     break;

@@ -116,7 +116,7 @@ public class MyTank extends Tank {
         }
         
         // 刷新坦克方向
-        getDirection();     
+        getDirection();
     }
     
     /**
@@ -128,6 +128,7 @@ public class MyTank extends Tank {
      */
     public void keyReleased(KeyEvent e) {
         int keyCode = e.getKeyCode();
+        Message message = null;
         switch(keyCode) {
             // F2键我方主坦克复位恢复最初始状态
             case KeyEvent.VK_F2:
@@ -135,7 +136,7 @@ public class MyTank extends Tank {
                 break;
              // F键发射炮弹    
             case KeyEvent.VK_F:
-                Message message = new TankFireMessage(this);
+                message = new TankFireMessage(this);
                 twc.netClient.send(message);
                 twc.missilesOfMyTank.add(fire(colorOfMissile, dirOfBarrel));
                 break;
@@ -153,13 +154,15 @@ public class MyTank extends Tank {
                 break;
             // 超级发射一次往八个方向各发射一枚炮弹
             case KeyEvent.VK_A:
+                message = new TankSuperFireMessage(this);
+                twc.netClient.send(message);
                 superFire(colorOfMissile);
             default:
                 break; 
         }
         
         // 刷新坦克方向
-        getDirection();     
+        getDirection();
     }
     
     @Override

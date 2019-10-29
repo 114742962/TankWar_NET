@@ -5,6 +5,11 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JButton;
+import javax.swing.JDialog;
+
+import javafx.scene.control.Button;
+
 /**
  * @ProjectName:  [TankWar] 
  * @Package:      [com.guiyajun.tank.TankWarClient.java]  
@@ -74,9 +79,7 @@ public class TankWarClient extends Frame {
      */
     public void lauchFrame() {
         // 创建一个服务端线程
-        ThreadPoolService.getInstance().execute(new ServerThread()); 
-        netClient = new NetClient(this);
-        netClient.connect();
+        ThreadPoolService.getInstance().execute(new ServerThread());
         // 定义客户端的属性
         this.setTitle("TankWar");
         this.setLocation(40, 120);
@@ -86,14 +89,28 @@ public class TankWarClient extends Frame {
         this.setResizable(false);
         this.setVisible(true);
         
+        netClient = new NetClient(this);
+        ConnectJDialog connectJDialog = new ConnectJDialog();
+        connectJDialog.setVisible(true);
+        netClient.connect();
+        
         // 启动画面刷新线程池
         ThreadPoolService.getInstance().execute(new PaintTank()); 
         // 加入window事件监听
         this.addWindowListener(new WindowAdapter() {    
             @Override
             public void windowClosing(WindowEvent e) {
-                // 关闭游戏窗口
-                System.exit(0);
+                myTank.setAliveOfTank(false);
+                setVisible(false);
+                Message message = new TankExitMessage(myTank);
+                netClient.send(message);
+                try {
+                    Thread.currentThread().sleep(2000);
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                } finally {
+                    System.exit(-1);
+                }
             }
         });
         
@@ -207,7 +224,7 @@ public class TankWarClient extends Frame {
         // 画出记分区
         gOfBackScreen.fillRect(0, 0, GAME_WIDTH, SCORE_AREA);
         // 设置画笔的颜色为橘色
-        gOfBackScreen.setColor(Color.ORANGE);
+        gOfBackScreen.setColor(Color.LIGHT_GRAY);
         // 画出游戏区
         gOfBackScreen.fillRect(0, SCORE_AREA, GAME_WIDTH, GAME_HEIGHT - SCORE_AREA);
         // 设置画笔的颜色为黑色
@@ -264,5 +281,43 @@ public class TankWarClient extends Frame {
             new NetServer().start();
         }
         
+    }
+    
+    private class ConnectJDialog extends JDialog {
+        JButton button = new JButton("确定");
+        TextField serverIP = new TextField("127.0.0.1",12);
+        TextField TCPPort = new TextField(PropertiesManager.getPerproty("TCPServerPort"), 5);
+        TextField UDPClientPort = new TextField(PropertiesManager.getPerproty("UDPClientPort"), 5);
+        ConnectJDialog() {
+            super(TankWarClient.this, "Setting");
+            this.setModal(true);
+            this.setLayout(new FlowLayout());
+            this.add(new Label("ServerIP:"));
+            this.add(serverIP);
+            this.add(new Label("TCPPort:"));
+            this.add(TCPPort);
+            this.add(new Label("UDPClientPort:"));
+            this.add(UDPClientPort);
+            this.add(button);
+            this.pack();
+            this.setLocation(200, 200);
+            button.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    String ip = serverIP.getText();
+                    int TCP = Integer.parseInt(TCPPort.getText().trim());
+                    int UDP = Integer.parseInt(UDPClientPort.getText().trim());
+//                    netClient.serverIP = ip;
+//                    netClient.TCPServerPort = TCP;
+//                    netClient.UDPClientPort = TCP;
+                    setVisible(false);
+                }
+            });
+            this.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    setVisible(false);
+                }
+            });
+        }
     }
 }
