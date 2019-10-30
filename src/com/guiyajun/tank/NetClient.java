@@ -65,8 +65,6 @@ System.out.println("Send my UDPPort to server:" + UDPClientPort);
             
             twc.myTank.id = id;
             
-            Message message = new TankNewMessage(twc.myTank);
-            send(message);
 System.out.println("Connect to server and get a id:" + id);            
         } catch (ConnectException e) {
             System.out.println("The TCPServer is not started!");
@@ -95,8 +93,8 @@ System.out.println("Connect to server and get a id:" + id);
         ThreadPoolService.getInstance().execute(new UDPThread());
     }
     
-    public void send(Message tankMessage) {
-        tankMessage.send(datagramSocket);
+    public void send(Message message) {
+        message.send(datagramSocket);
     }
     
     private class UDPThread implements Runnable {

@@ -65,6 +65,7 @@ public class TankNewMessage implements Message{
                 dos.writeInt(myTank.id);
                 dos.writeInt(myTank.x);
                 dos.writeInt(myTank.y);
+                dos.writeInt(myTank.getBloodOfTank());
                 dos.writeInt(myTank.dir.ordinal());
                 dos.writeBoolean(myTank.friendly);
             }
@@ -105,10 +106,12 @@ public class TankNewMessage implements Message{
         try {
             int id = dis.readInt();
             if (twc.myTank != null && id == twc.myTank.id) {
+System.out.println("1");                
                 return;
             }
             int x = dis.readInt();
             int y = dis.readInt();
+            int bloodOfTank = dis.readInt();
             Direction dir = Direction.values()[dis.readInt()];
             boolean friendly = dis.readBoolean();
             boolean exists = false;
@@ -137,6 +140,7 @@ System.out.println("messageType:" + messageType + "-id:" + id + "-x:" + x + "-y:
                 
                 if (tank != null) {
                     tank.id = id;
+                    tank.setBloodOfTank(bloodOfTank);
                     twc.tanks.add(tank);
                 }
             }

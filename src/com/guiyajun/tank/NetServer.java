@@ -59,8 +59,7 @@ public class NetServer {
 System.out.println("The TCPServer is start at port:" + TCPServerPort);            
             while (start) {
                 Socket socket = ss.accept();
-System.out.println("A client is connect!" + socket.getInetAddress() + ":" + socket.getPort()
-                    + ":" + id);
+System.out.println("A client is connect!" + socket.getInetAddress() + ":" + socket.getPort());
                 dis = new DataInputStream(socket.getInputStream());
                 int udpPort = dis.readInt();
                 String clientIPAdress = socket.getInetAddress().getHostAddress();

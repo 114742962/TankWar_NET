@@ -327,7 +327,6 @@ public class TankWarClient extends Frame {
             this.add(new Label("UDPClientPort:"));
             this.add(UDPClientPort);
             this.add(button);
-//            this.pack();
             button.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     // 创建一个服务端实例
@@ -346,8 +345,10 @@ public class TankWarClient extends Frame {
                         serverThread = new ServerThread();
                         ThreadPoolService.getInstance().execute(serverThread);
                     }
-                    // 创建一个客户端实例
+                    // 客户端连接服务端
                     netClient.connect();
+                    Message message = new TankNewMessage(myTank);
+                    netClient.send(message);
                 }
             });
             this.addWindowListener(new WindowAdapter() {
