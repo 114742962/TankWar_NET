@@ -32,14 +32,19 @@ public class TankNewMessage implements Message{
     private int messageType = Message.TANK_NEW_MESSAGE;  
     Tank myTank = null;
     TankWarClient twc = null;
-    private int UDPServerPort = Integer.parseInt(PropertiesManager.getPerproty("UDPServerPort"));
+    private int UDPServerPort;
+    private String serverIP;
     
     TankNewMessage(Tank myTank) {
         this.myTank = myTank;
+        this.UDPServerPort = NetServer.UDPServerPort;
+        this.serverIP = NetClient.serverIP;
     }
     
     TankNewMessage(TankWarClient twc) {
         this.twc = twc;
+        this.UDPServerPort = NetServer.UDPServerPort;
+        this.serverIP = NetClient.serverIP;
     }
     
     /**
@@ -53,14 +58,16 @@ public class TankNewMessage implements Message{
         ByteArrayOutputStream baos = null;
         DataOutputStream dos = null;
         try {
-            baos = new ByteArrayOutputStream();
-            dos = new DataOutputStream(baos);
-            dos.writeInt(messageType);
-            dos.writeInt(myTank.id);
-            dos.writeInt(myTank.x);
-            dos.writeInt(myTank.y);
-            dos.writeInt(myTank.dir.ordinal());
-            dos.writeBoolean(myTank.friendly);
+            if (myTank != null) {
+                baos = new ByteArrayOutputStream();
+                dos = new DataOutputStream(baos);
+                dos.writeInt(messageType);
+                dos.writeInt(myTank.id);
+                dos.writeInt(myTank.x);
+                dos.writeInt(myTank.y);
+                dos.writeInt(myTank.dir.ordinal());
+                dos.writeBoolean(myTank.friendly);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -72,16 +79,17 @@ public class TankNewMessage implements Message{
                 }
             }
         }
-        byte[] buf = baos.toByteArray();
-        String ServerIP = PropertiesManager.getPerproty("ServerIP");
-        DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, 
-            new InetSocketAddress(ServerIP, UDPServerPort));
-        try {
-            if (datagramSocket != null) {
-                datagramSocket.send(datagramPacket);
+        if (baos != null) {
+            byte[] buf = baos.toByteArray();
+            DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, 
+                    new InetSocketAddress(serverIP, UDPServerPort));
+            try {
+                if (datagramSocket != null) {
+                    datagramSocket.send(datagramPacket);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -118,9 +126,19 @@ public class TankNewMessage implements Message{
 System.out.println("Got a Tank_new_message from server!");
 System.out.println("messageType:" + messageType + "-id:" + id + "-x:" + x + "-y:" + y 
     + "-dir:" + dir + "-friendly:" + friendly);
-                MyTank tank = new MyTank(x, y, friendly, twc);
-                tank.id = id;
-                twc.tanks.add(tank);
+                
+                MyTank tank = null;
+                
+                if (id <= 110) {
+                    tank = new MyTank(700, 540 - 50 * (id - 100), true, twc);
+                } else {
+                    tank = new MyTank(70, 540 - 50 * (id - 100), true, twc);
+                }
+                
+                if (tank != null) {
+                    tank.id = id;
+                    twc.tanks.add(tank);
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();

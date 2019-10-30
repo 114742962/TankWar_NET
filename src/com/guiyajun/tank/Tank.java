@@ -180,13 +180,29 @@ public class Tank {
                 this.stay();
             }
             
-            // 坦克与坦克的碰撞检测
+            // 我方坦克与机器人坦克的碰撞检测
             for (int i=0; i<twc.enemyTanks.size(); i++) {
                 Tank tank = twc.enemyTanks.get(i);
                     
                 if (this.getAliveOfTank() && tank.getAliveOfTank() && !this.equals(tank) && !this.equals(twc.myTank)) {
                     if (twc.myTank.getRectOfTank().intersects(this.getRectOfTank())
                         || tank.getRectOfTank().intersects(this.getRectOfTank())) {
+                        this.stay();
+                    }
+                } else if (this.getAliveOfTank() && tank.getAliveOfTank() && this.equals(twc.myTank)) {
+                    if (tank.getRectOfTank().intersects(twc.myTank.getRectOfTank())) {
+                        twc.myTank.stay();
+                    }
+                }
+            }
+            
+            // 我方坦克与玩家坦克的碰撞检测
+            for (int i=0; i<twc.tanks.size(); i++) {
+                Tank tank = twc.tanks.get(i);
+                
+                if (this.getAliveOfTank() && tank.getAliveOfTank() && !this.equals(tank) && !this.equals(twc.myTank)) {
+                    if (twc.myTank.getRectOfTank().intersects(this.getRectOfTank())
+                            || tank.getRectOfTank().intersects(this.getRectOfTank())) {
                         this.stay();
                     }
                 } else if (this.getAliveOfTank() && tank.getAliveOfTank() && this.equals(twc.myTank)) {

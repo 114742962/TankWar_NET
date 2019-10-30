@@ -30,16 +30,21 @@ import java.net.InetSocketAddress;
  */
 public class TankBarrelMessage implements Message {
     private int messageType = Message.TANK_MOVE_MESSAGE;
-    private int UDPServerPort = Integer.parseInt(PropertiesManager.getPerproty("UDPServerPort"));
+    private int UDPServerPort;
+    private String serverIP;
     public Tank myTank = null;
     public TankWarClient twc = null;
      
     TankBarrelMessage(Tank myTank) {
         this.myTank = myTank;
+        this.UDPServerPort = NetServer.UDPServerPort;
+        this.serverIP = NetClient.serverIP;
     }
     
     TankBarrelMessage(TankWarClient twc) {
         this.twc = twc;
+        this.UDPServerPort = NetServer.UDPServerPort;
+        this.serverIP = NetClient.serverIP;
     }
     
     @Override
@@ -66,9 +71,8 @@ public class TankBarrelMessage implements Message {
             }
         }
         byte[] buf = baos.toByteArray();
-        String ServerIP = PropertiesManager.getPerproty("ServerIP");
         DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, 
-            new InetSocketAddress(ServerIP, UDPServerPort));
+            new InetSocketAddress(serverIP, UDPServerPort));
         try {
             if (datagramSocket != null) {
                 datagramSocket.send(datagramPacket);

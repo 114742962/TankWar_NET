@@ -32,14 +32,18 @@ public class TankExitMessage implements Message {
     private int messageType = Message.TANK_EXIT_MESSAGE;  
     Tank myTank = null;
     TankWarClient twc = null;
-    private int UDPServerPort = Integer.parseInt(PropertiesManager.getPerproty("UDPServerPort"));
-    
+    private int UDPServerPort;
+    private String serverIP;
     TankExitMessage(Tank myTank) {
         this.myTank = myTank;
+        this.UDPServerPort = NetServer.UDPServerPort;
+        this.serverIP = NetClient.serverIP;
     }
     
     TankExitMessage(TankWarClient twc) {
         this.twc = twc;
+        this.UDPServerPort = NetServer.UDPServerPort;
+        this.serverIP = NetClient.serverIP;
     }
     @Override
     public void send(DatagramSocket datagramSocket) {
@@ -62,7 +66,6 @@ public class TankExitMessage implements Message {
             }
         }
         byte[] buf = baos.toByteArray();
-        String serverIP = PropertiesManager.getPerproty("ServerIP");
         DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, 
             new InetSocketAddress(serverIP, UDPServerPort));
         try {

@@ -5,10 +5,10 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-
-import javafx.scene.control.Button;
+import javax.swing.JRadioButton;
 
 /**
  * @ProjectName:  [TankWar] 
@@ -31,7 +31,7 @@ public class TankWarClient extends Frame {
     /** 记分区的高度，宽度与游戏客户端宽度一致，这里不做申明 */ 
     public static final int SCORE_AREA = 60;
     /** 在界面左边实例化一个钢化墙壁 */
-    public Wall wallLeft = new Wall(100, 150, 20, 350, this);
+    public Wall wallLeft = new Wall(180, 150, 20, 350, this);
     /** 在界面右边实例化一个钢化墙壁 */
     public Wall wallRight = new Wall(600, 150, 20, 350, this);
     /** 敌方坦克集合 */
@@ -49,9 +49,14 @@ public class TankWarClient extends Frame {
     /** 定义一个虚拟屏幕，目的是双缓冲，先把图片画到虚拟屏幕上 */
     Image backScreen = null;
     /** 主坦克 */
-    MyTank myTank = new MyTank(700, 400, true, this);
+    MyTank myTank = null;
     /** 网络客户端 */
     NetClient netClient = null;
+    /** 网络服务端 */
+    NetServer netServer = null;
+    /** 网络服务端线程 */
+    ServerThread serverThread = null;
+    
     /**
      * @Fields field:field:(显示声明serialVersionUID可以避免对象不一致)
      */
@@ -78,8 +83,6 @@ public class TankWarClient extends Frame {
     * @throws
      */
     public void lauchFrame() {
-        // 创建一个服务端线程
-        ThreadPoolService.getInstance().execute(new ServerThread());
         // 定义客户端的属性
         this.setTitle("TankWar");
         this.setLocation(40, 120);
@@ -89,10 +92,8 @@ public class TankWarClient extends Frame {
         this.setResizable(false);
         this.setVisible(true);
         
-        netClient = new NetClient(this);
         ConnectJDialog connectJDialog = new ConnectJDialog();
         connectJDialog.setVisible(true);
-        netClient.connect();
         
         // 启动画面刷新线程池
         ThreadPoolService.getInstance().execute(new PaintTank()); 
@@ -100,12 +101,17 @@ public class TankWarClient extends Frame {
         this.addWindowListener(new WindowAdapter() {    
             @Override
             public void windowClosing(WindowEvent e) {
-                myTank.setAliveOfTank(false);
+                Message message = null;
+                if (myTank != null) {
+                    message = new TankExitMessage(myTank);
+                    myTank.setAliveOfTank(false);
+                }
                 setVisible(false);
-                Message message = new TankExitMessage(myTank);
-                netClient.send(message);
+                if (netClient != null && message != null) {
+                    netClient.send(message);
+                }
                 try {
-                    Thread.currentThread().sleep(2000);
+                    Thread.sleep(2000);
                 } catch (InterruptedException e1) {
                     e1.printStackTrace();
                 } finally {
@@ -201,7 +207,9 @@ public class TankWarClient extends Frame {
         }
         
         // 画出主坦克
-        myTank.draw(g);
+        if (myTank != null) {
+            myTank.draw(g);
+        }
         // 画出左墙
         wallLeft.draw(g);
         // 画出右墙
@@ -224,13 +232,15 @@ public class TankWarClient extends Frame {
         // 画出记分区
         gOfBackScreen.fillRect(0, 0, GAME_WIDTH, SCORE_AREA);
         // 设置画笔的颜色为橘色
-        gOfBackScreen.setColor(Color.LIGHT_GRAY);
+        gOfBackScreen.setColor(Color.ORANGE);
         // 画出游戏区
         gOfBackScreen.fillRect(0, SCORE_AREA, GAME_WIDTH, GAME_HEIGHT - SCORE_AREA);
         // 设置画笔的颜色为黑色
         gOfBackScreen.setColor(Color.BLACK);
         // 记分区画出我方坦克血量值
-        gOfBackScreen.drawString("BloodOfMyTank: " + myTank.getBloodOfTank(), 20, 50);
+        if (myTank != null) {
+            gOfBackScreen.drawString("BloodOfMyTank: " + myTank.getBloodOfTank(), 20, 50);
+        }
         // 记分区画出敌方坦克数量
         gOfBackScreen.drawString("EnemyTanks: " + enemyTanks.size(), 150, 50);
         // 记分区画出屏幕中出现的我方炮弹数量
@@ -278,38 +288,66 @@ public class TankWarClient extends Frame {
     private class ServerThread implements Runnable {
 
         public void run() {
-            new NetServer().start();
+            if (netServer != null) {
+                netServer.start();
+            }
         }
-        
     }
     
     private class ConnectJDialog extends JDialog {
+        /**
+        * @Fields field:field:{todo}(用一句话描述这个变量表示什么)
+        */
+        private static final long serialVersionUID = 1L;
+        ButtonGroup bg = new ButtonGroup();
         JButton button = new JButton("确定");
+        JRadioButton radioButtonServer = new JRadioButton("server");
+        JRadioButton radioButtonClient = new JRadioButton("client", true);
         TextField serverIP = new TextField("127.0.0.1",12);
-        TextField TCPPort = new TextField(PropertiesManager.getPerproty("TCPServerPort"), 5);
+        TextField TCPServerPort = new TextField(PropertiesManager.getPerproty("TCPServerPort"), 5);
+        TextField UDPServerPort = new TextField(PropertiesManager.getPerproty("UDPServerPort"), 5);
         TextField UDPClientPort = new TextField(PropertiesManager.getPerproty("UDPClientPort"), 5);
         ConnectJDialog() {
             super(TankWarClient.this, "Setting");
+            this.setSize(190, 200);
+            this.setLocation(350, 300);
+            this.setResizable(false);
             this.setModal(true);
             this.setLayout(new FlowLayout());
+            bg.add(radioButtonServer);
+            bg.add(radioButtonClient);
+            this.add(radioButtonServer);
+            this.add(radioButtonClient);
             this.add(new Label("ServerIP:"));
             this.add(serverIP);
-            this.add(new Label("TCPPort:"));
-            this.add(TCPPort);
+            this.add(new Label("TCPServerPort:"));
+            this.add(TCPServerPort);
+            this.add(new Label("UDPServerPort:"));
+            this.add(UDPServerPort);
             this.add(new Label("UDPClientPort:"));
             this.add(UDPClientPort);
             this.add(button);
-            this.pack();
-            this.setLocation(200, 200);
+//            this.pack();
             button.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
+                    // 创建一个服务端实例
+                    netServer = new NetServer();
                     String ip = serverIP.getText();
-                    int TCP = Integer.parseInt(TCPPort.getText().trim());
-                    int UDP = Integer.parseInt(UDPClientPort.getText().trim());
-//                    netClient.serverIP = ip;
-//                    netClient.TCPServerPort = TCP;
-//                    netClient.UDPClientPort = TCP;
+                    int TCPServer = Integer.parseInt(TCPServerPort.getText().trim());
+                    int UDPServer = Integer.parseInt(UDPServerPort.getText().trim());
+                    int UDPClient = Integer.parseInt(UDPClientPort.getText().trim());
+                    NetServer.TCPServerPort = TCPServer;
+                    NetServer.UDPServerPort = UDPServer;
+                    netClient = new NetClient(TankWarClient.this);                    
+                    NetClient.serverIP = ip;
+                    NetClient.UDPClientPort = UDPClient;
                     setVisible(false);
+                    if (radioButtonServer.isSelected() && serverThread == null) {
+                        serverThread = new ServerThread();
+                        ThreadPoolService.getInstance().execute(serverThread);
+                    }
+                    // 创建一个客户端实例
+                    netClient.connect();
                 }
             });
             this.addWindowListener(new WindowAdapter() {

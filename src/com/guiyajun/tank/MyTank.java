@@ -20,7 +20,9 @@ import java.awt.event.KeyEvent;
  */
 public class MyTank extends Tank {
     /** 主坦克炮弹的颜色 */
-    public Color colorOfMissile = null;
+    public Color colorOfFriendMissile = null;
+    /** 主坦克炮弹的颜色 */
+    public Color colorOfEnermyMissile = null;
     /** 主坦克的渐变初始颜色 */
     public Color startColor;
     /** 主坦克的渐变结束颜色 */
@@ -55,7 +57,8 @@ public class MyTank extends Tank {
         green = (int)(Math.random() * 255);
         blue = (int)(Math.random() * 255);
         endColor = new Color(red, green, blue);
-        colorOfMissile = endColor;
+        colorOfFriendMissile = Color.BLUE;
+        colorOfEnermyMissile = Color.BLACK;
     }
     
     @Override
@@ -138,7 +141,7 @@ public class MyTank extends Tank {
             case KeyEvent.VK_F:
                 message = new TankFireMessage(this);
                 twc.netClient.send(message);
-                twc.missilesOfMyTank.add(fire(colorOfMissile, dirOfBarrel));
+                twc.missilesOfMyTank.add(fire(colorOfFriendMissile, dirOfBarrel));
                 break;
             case KeyEvent.VK_UP:
                 beUp = false;
@@ -156,7 +159,7 @@ public class MyTank extends Tank {
             case KeyEvent.VK_A:
                 message = new TankSuperFireMessage(this);
                 twc.netClient.send(message);
-                superFire(colorOfMissile);
+                superFire(colorOfFriendMissile);
             default:
                 break; 
         }
@@ -203,7 +206,7 @@ public class MyTank extends Tank {
         
         // 每个方向发射一枚炮弹
         for(int i=0; i<dirs.length - 1; i++) {
-            twc.missilesOfMyTank.add(fire(colorOfMissile, dirs[i]));
+            twc.missilesOfMyTank.add(fire(colorOfFriendMissile, dirs[i]));
         }
     }
     

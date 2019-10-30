@@ -37,46 +37,47 @@ public class NetServer {
     /** 坦克的编号，每加入一个坦克增加1 */
     private static int id = 100;
     /** UDP端口号 */
-    private static int UDPServerPort = Integer.parseInt(PropertiesManager.getPerproty("UDPServerPort"));
+    public static int UDPServerPort;
     /** 从配置文件中读取服务端TCP端口号 */
-    private static int TCPServerPort = Integer.parseInt(PropertiesManager.getPerproty("TCPServerPort"));
+    public static int TCPServerPort;
+    /** 创建一个netClient集合 */
     private List<Client> clients = new ArrayList<>();
     /** 创建一个UDP服务 */
     DatagramSocket datagramSocket = null;
-    /** 主坦克*/
+    /** UDP服务的线程 */
+    UDPServerThread UDPThread = null;
+    /** 当start()被调用时改变，用于是否开始接受TCP客户端的连接 */
+    boolean start = false;
     
-    
-//    public static void main(String[] args) {
-//        new NetServer().start();
-//    }
-    
-    public void start () {
+    public void start() {
+        start = true;
         ServerSocket ss = null;
         DataInputStream dis = null;
         DataOutputStream dos = null;
         try {
             ss = new ServerSocket(TCPServerPort);
-            while (true) {
+System.out.println("The TCPServer is start at port:" + TCPServerPort);            
+            while (start) {
                 Socket socket = ss.accept();
 System.out.println("A client is connect!" + socket.getInetAddress() + ":" + socket.getPort()
                     + ":" + id);
                 dis = new DataInputStream(socket.getInputStream());
                 int udpPort = dis.readInt();
-System.out.println("The udpPort of the client:" + udpPort);
                 String clientIPAdress = socket.getInetAddress().getHostAddress();
                 clients.add(new Client(clientIPAdress, udpPort));
                 dos  = new DataOutputStream(socket.getOutputStream());
                 dos.writeInt(id++);
                 dos.flush();
                 
-                datagramSocket = new DatagramSocket(UDPServerPort);
-                
                 // 启动UDP服务线程池
-                ThreadPoolService.getInstance().execute(new UDPServerThread()); 
-                
+                if (UDPThread == null) {
+                    UDPThread = new UDPServerThread();
+                    ThreadPoolService.getInstance().execute(UDPThread); 
+                }
             }
         } catch (BindException e) {
-            System.out.println("The server is already started on port:" + TCPServerPort);
+            System.out.println("The TCPServerPort is already be used!"
+                + "Please wait a moment or change the port.");
         } catch (SocketException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -139,6 +140,7 @@ System.out.println("The udpPort of the client:" + udpPort);
         @Override
         public void run() {
             try {
+                datagramSocket = new DatagramSocket(UDPServerPort);
                 datagramPacket = new DatagramPacket(buffered, buffered.length);
                 while (datagramSocket != null) {
                     datagramSocket.receive(datagramPacket);

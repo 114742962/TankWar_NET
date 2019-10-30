@@ -222,7 +222,7 @@ public class Missile {
     * @return void    返回类型
     * @throws
      */
-    public void collisionDetection() { 
+    public void collisionDetection() {
         if (twc != null) {
             // 子弹与围墙碰撞检测
             if (x < 0 || y < TankWarClient.SCORE_AREA || x > TankWarClient.GAME_WIDTH 
@@ -232,6 +232,13 @@ public class Missile {
                 twc.missilesOfMyTank.remove(this);
             }
 
+            // 子弹与内墙碰撞检测
+            if (this.getRectOfMissle().intersects(twc.wallLeft.getRectOfWall()) 
+                || this.getRectOfMissle().intersects(twc.wallRight.getRectOfWall())) {
+                aliveOfMissile = false;
+                twc.missilesOfMyTank.remove(this);
+            }
+            
             // 其他玩家主坦克子弹与我方坦克碰撞
             for (int j=0; j<twc.missilesOfEnemyTanks.size(); j++) {
                 Missile mofen = twc.missilesOfEnemyTanks.get(j);

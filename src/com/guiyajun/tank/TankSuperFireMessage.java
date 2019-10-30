@@ -30,16 +30,21 @@ import java.net.InetSocketAddress;
  */
 public class TankSuperFireMessage implements Message {
     private int messageType = Message.TANK_SUPER_FIRE_MESSAGE;
-    private int UDPServerPort = Integer.parseInt(PropertiesManager.getPerproty("UDPServerPort"));
+    private int UDPServerPort;
+    private String serverIP;
     public Tank myTank = null;
     public TankWarClient twc = null;
     
     public TankSuperFireMessage(Tank myTank) {
         this.myTank = myTank;
+        this.UDPServerPort = NetServer.UDPServerPort;
+        this.serverIP = NetClient.serverIP;
     }
     
     public TankSuperFireMessage(TankWarClient twc) {
         this.twc = twc;
+        this.UDPServerPort = NetServer.UDPServerPort;
+        this.serverIP = NetClient.serverIP;
     }
 
     @Override
@@ -63,7 +68,6 @@ public class TankSuperFireMessage implements Message {
             }
         }
         byte[] buf = baos.toByteArray();
-        String serverIP = PropertiesManager.getPerproty("ServerIP");
         DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, 
             new InetSocketAddress(serverIP, UDPServerPort));
         try {
@@ -93,7 +97,7 @@ public class TankSuperFireMessage implements Message {
                     
                     // 每个方向发射一枚炮弹
                     for(int j=0; j<dirs.length - 1; j++) {
-                        twc.missilesOfEnemyTanks.add(tank.fire(tank.colorOfMissile, dirs[j]));
+                        twc.missilesOfEnemyTanks.add(tank.fire(tank.colorOfEnermyMissile, dirs[j]));
                     }
                     break;
                 }

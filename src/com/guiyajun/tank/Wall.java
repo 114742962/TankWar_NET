@@ -26,6 +26,10 @@ public class Wall {
     private int x;
     /** 墙壁的y坐标 */
     private int y;
+    /** 墙的渐变初始颜色 */
+    public Color startColor;
+    /** 墙的渐变结束颜色 */
+    public Color endColor;
     
     /**
     * @Description: 创建一个新的实例 Wall.
@@ -41,6 +45,18 @@ public class Wall {
         this.width = width;
         this.height = height;
         this.twc = twc;
+        initColor();
+    }
+    
+    private void initColor() {
+        int red = (int)(Math.random() * 255);
+        int green = (int)(Math.random() * 255);
+        int blue = (int)(Math.random() * 255);
+        startColor = new Color(red, green, blue);
+        red = (int)(Math.random() * 255);
+        green = (int)(Math.random() * 255);
+        blue = (int)(Math.random() * 255);
+        endColor = new Color(red, green, blue);
     }
     
     /**
@@ -52,8 +68,11 @@ public class Wall {
      */
     public void draw(Graphics g) {
         Color c = g.getColor();
-        g.setColor(Color.BLACK);
-        g.fillRect(x, y, width, height);        
+        Graphics2D graphics2D = (Graphics2D)g;
+        GradientPaint gradientPaint = new GradientPaint(10, 10, startColor, 32, 
+            32, endColor, true);
+        graphics2D.setPaint(gradientPaint);
+        graphics2D.fillRect(x, y, width, height);
         g.setColor(c);
     }
     

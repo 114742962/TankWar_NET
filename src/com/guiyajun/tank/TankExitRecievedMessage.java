@@ -31,17 +31,22 @@ import java.net.InetSocketAddress;
 public class TankExitRecievedMessage implements Message {
     private int id;
     private int messageType = Message.TANK_EXIT_RECEIVED_MESSAGE;
-    private int UDPServerPort = Integer.parseInt(PropertiesManager.getPerproty("UDPServerPort"));
+    private int UDPServerPort;
+    private String serverIP;
     public Tank myTank = null;
     public TankWarClient twc = null;
     
     public TankExitRecievedMessage(Tank myTank) {
         this.myTank = myTank;
+        this.UDPServerPort = NetServer.UDPServerPort;
+        this.serverIP = NetClient.serverIP;
     }
     
     public TankExitRecievedMessage(int id, TankWarClient twc) {
         this.id = id;
         this.twc = twc;
+        this.UDPServerPort = NetServer.UDPServerPort;
+        this.serverIP = NetClient.serverIP;
     }
     
     @Override
@@ -65,7 +70,6 @@ public class TankExitRecievedMessage implements Message {
             }
         }
         byte[] buf = baos.toByteArray();
-        String serverIP = PropertiesManager.getPerproty("ServerIP");
         DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, 
             new InetSocketAddress(serverIP, UDPServerPort));
         try {

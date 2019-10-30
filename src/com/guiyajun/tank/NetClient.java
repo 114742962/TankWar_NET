@@ -33,17 +33,19 @@ import java.net.UnknownHostException;
  * @Version:      [v1.0]
  */
 public class NetClient {
-    public static int TCPServerPort = Integer.parseInt(PropertiesManager.getPerproty("TCPServerPort"));
-    public static String serverIP = PropertiesManager.getPerproty("ServerIP");
-    public static int UDPClientPort = 35554;
+    public static int TCPServerPort;
+    public static int UDPClientPort;
+    public static String serverIP;
     public TankWarClient twc = null;
     private DatagramSocket datagramSocket = null;
     
     NetClient(TankWarClient twc) {
         this.twc = twc;
+        NetClient.TCPServerPort = NetServer.TCPServerPort;
     }
     
     public void connect() {
+System.out.println("The TCPServerPort is:" + TCPServerPort);        
         Socket socket = null;
         DataOutputStream dos = null;
         DataInputStream dis = null;
@@ -51,9 +53,20 @@ public class NetClient {
             socket = new Socket(serverIP, TCPServerPort);
             dos = new DataOutputStream(socket.getOutputStream());
             dos.writeInt(UDPClientPort);
+System.out.println("Send my UDPPort to server:" + UDPClientPort);            
             dis = new DataInputStream(socket.getInputStream());
             int id = dis.readInt();
+                
+            if (id <= 110) {
+                twc.myTank = new MyTank(700, 540 - 50 * (id - 100), true, twc);
+            } else {
+                twc.myTank = new MyTank(70, 540 - 50 * (id - 100), true, twc);
+            }
+            
             twc.myTank.id = id;
+            
+            Message message = new TankNewMessage(twc.myTank);
+            send(message);
 System.out.println("Connect to server and get a id:" + id);            
         } catch (ConnectException e) {
             System.out.println("The TCPServer is not started!");
@@ -79,12 +92,7 @@ System.out.println("Connect to server and get a id:" + id);
         } catch (SocketException e) {
             e.printStackTrace();
         }
-        
-        TankNewMessage tankNewMessage = new TankNewMessage(twc.myTank);
-        send(tankNewMessage);
-        
         ThreadPoolService.getInstance().execute(new UDPThread());
-        
     }
     
     public void send(Message tankMessage) {
