@@ -240,19 +240,29 @@ public class Missile {
             }
             
             // 其他玩家主坦克子弹与我方坦克碰撞
-            for (int j=0; j<twc.missilesOfEnemyTanks.size(); j++) {
-                Missile mofen = twc.missilesOfEnemyTanks.get(j);
-                Tank myTank = twc.myTank;
-                if (myTank != null && mofen != null && myTank.getAliveOfTank() 
-                    && mofen.getAliveOfMissile()) {
-                    if (myTank.getRectOfTank().intersects(mofen.getRectOfMissle())) {
-                        hitTank(myTank);
-                        mofen.setAliveOfMissile(false);
-                    }
+//            for (int j=0; j<twc.missilesOfEnemyTanks.size(); j++) {
+//                Missile mofen = twc.missilesOfEnemyTanks.get(j);
+//                Tank myTank = twc.myTank;
+//                if (myTank != null && mofen != null && myTank.getAliveOfTank() 
+//                    && mofen.getAliveOfMissile()) {
+//                    if (myTank.getRectOfTank().intersects(mofen.getRectOfMissle())) {
+//                        hitTank(myTank);
+//                        mofen.setAliveOfMissile(false);
+//                    }
+//                }
+//            }
+            
+            // 玩家坦克子弹与子弹碰撞
+            for (int i=0; i<twc.missilesOfMyTank.size(); i++) {
+                Missile mofmy = twc.missilesOfMyTank.get(i);
+                if (this.equals(mofmy)) {
+                    break;
+                } else if (mofmy !=null && mofmy.getAliveOfMissile()) {
+                    this.getRectOfMissle().intersects(mofmy.getRectOfMissle());
                 }
             }
             
-            // 主坦克子弹与敌方坦克子弹碰撞
+            // 主坦克子弹与机器人坦克子弹碰撞
             for (int i=0; i<twc.missilesOfMyTank.size(); i++) {
                 for (int j=0; j<twc.missilesOfEnemyTanks.size(); j++) {
                     Missile mofmy = twc.missilesOfMyTank.get(i);
@@ -268,6 +278,12 @@ public class Missile {
                     }
                 }
             }
+            
+            // 子弹与玩家坦克碰撞检测
+            hitPlayerTanks(twc.tanks);
+            
+            // 子弹与机器人坦克碰撞检测
+            hitEnemyTanks(twc.enemyTanks);
         }
     }
     

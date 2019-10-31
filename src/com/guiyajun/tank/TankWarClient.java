@@ -163,15 +163,10 @@ public class TankWarClient extends Frame {
         // 画出我方炮弹集合中所有活着的炮弹并将被摧毁的炮弹移除
         for (int i=0; i<missilesOfMyTank.size(); i++) {
             Missile m = missilesOfMyTank.get(i);
-            if (m != null) {
-                m.hitEnemyTanks(enemyTanks);
-                m.hitPlayerTanks(tanks);
-                
-                if (m.getAliveOfMissile()) {
-                    m.draw(g);
-                } else {
-                    missilesOfMyTank.remove(m);
-                }
+            if (m != null && m.getAliveOfMissile()) {
+                m.draw(g);
+            } else {
+                missilesOfMyTank.remove(m);
             }
         }
         
