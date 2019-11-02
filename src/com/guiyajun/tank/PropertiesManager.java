@@ -24,7 +24,9 @@ import java.util.Properties;
  * @Version:      [v1.0]
  */
 public class PropertiesManager {
+    /** 声明一个配置文件工具类的实例 */
     private static Properties properties = new Properties();
+    /** 通过静态加载的方式将配置文件加载到内存 */
     static {
         try {
             properties.load(PropertiesManager.class.getClassLoader().getResourceAsStream("config/tank.properties"));
@@ -33,8 +35,16 @@ public class PropertiesManager {
         }
     }
     
+    // 将构造方法设置为私有禁止通过new来创建类的实例
     private PropertiesManager() {}
     
+    /**
+    * @Title: getPerproty
+    * @Description: 通过变量名获取到配置文件中对应的值
+    * @param @param key参数的变量名 
+    * @return String    返回类型
+    * @throws
+     */
     public static String getPerproty(String key) {
         return properties.getProperty(key);
     }

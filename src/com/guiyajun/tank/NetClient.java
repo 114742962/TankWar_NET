@@ -33,36 +33,49 @@ import java.net.UnknownHostException;
  * @Version:      [v1.0]
  */
 public class NetClient {
+    /** TCP服务的端口 */
     public static int TCPServerPort;
+    /** TCP客户端的UDP端口 */
     public static int UDPClientPort;
+    /** TCP的IP地址 */
     public static String serverIP;
+    /** 客户端实例变量用于管理元素 */
     public TankWarClient twc = null;
+    /** UDP服务引用变量 */
     private DatagramSocket datagramSocket = null;
     
+    /**
+    *@Description: 创建一个新的实例 NetClient.
+    * @param twc 客户端实例变量用于管理元素
+     */
     NetClient(TankWarClient twc) {
         this.twc = twc;
+        // 获取到服务端的端口
         NetClient.TCPServerPort = NetServer.TCPServerPort;
     }
     
     public void connect() {
-System.out.println("The TCPServerPort is:" + TCPServerPort);        
         Socket socket = null;
         DataOutputStream dos = null;
         DataInputStream dis = null;
         try {
             socket = new Socket(serverIP, TCPServerPort);
             dos = new DataOutputStream(socket.getOutputStream());
+            // 将客户端自己的UDP端口号通过TCP发送给服务端
             dos.writeInt(UDPClientPort);
 System.out.println("Send my UDPPort to server:" + UDPClientPort);            
             dis = new DataInputStream(socket.getInputStream());
+            // 接收服务端给坦克分配的ID号
             int id = dis.readInt();
-                
+            
+            // 通过ID号排列坦克加入后的出生地点
             if (id <= 110) {
                 twc.myTank = new MyTank(700, 540 - 50 * (id - 100), true, twc);
             } else {
                 twc.myTank = new MyTank(70, 540 - 50 * (id - 100), true, twc);
             }
             
+            // 将服务端分配的ID号赋值给自己的坦克
             twc.myTank.id = id;
             
 System.out.println("Connect to server and get a id:" + id);            
@@ -83,6 +96,7 @@ System.out.println("Connect to server and get a id:" + id);
             }
         }
         
+        // 客户端创建UDP服务，用于接收消息
         try {
             datagramSocket = new DatagramSocket(UDPClientPort);
         } catch (BindException e) {
@@ -90,21 +104,46 @@ System.out.println("Connect to server and get a id:" + id);
         } catch (SocketException e) {
             e.printStackTrace();
         }
+        
+        // 启动UDP接收消息线程，UDPThread为内部类
         ThreadPoolService.getInstance().execute(new UDPThread());
     }
     
+    /**
+    * @Title: send
+    * @Description: 发送消息体
+    * @param @param message    参数 
+    * @return void    返回类型
+    * @throws
+     */
     public void send(Message message) {
         message.send(datagramSocket);
     }
     
+    /**
+     * @ProjectName:  [TankWar_NET] 
+     * @Package:      [com.guiyajun.tank.NetClient.java]  
+     * @ClassName:    [UDPThread]   
+     * @Description:  [UDP接收消息并解析消息]   
+     * @Author:       [桂亚君]   
+     * @CreateDate:   [2019年11月2日 下午6:17:15]   
+     * @UpdateUser:   [桂亚君]   
+     * @UpdateDate:   [2019年11月2日 下午6:17:15]   
+     * @UpdateRemark: [说明本次修改内容]  
+     * @Version:      [v1.0]
+     */
     private class UDPThread implements Runnable {
+        // 用来装UDP接收到的数据
         byte[] buffered = new byte[1024];
+        
         @Override
         public void run() {
             try {
                 DatagramPacket datagramPacket = new DatagramPacket(buffered, buffered.length);
                 while (datagramSocket != null) {
+                    // 接收数据
                     datagramSocket.receive(datagramPacket);
+                    // 解析数据
                     parse(datagramPacket);
                 } 
             } catch (IOException e) {
@@ -112,11 +151,20 @@ System.out.println("Connect to server and get a id:" + id);
             }
         }
         
+        /**
+        * @Title: parse
+        * @Description: 根据接收到的消息体类型调用对应的消息体解析方法
+        * @param @param datagramPacket    参数 
+        * @return void    返回类型
+        * @throws
+         */
         public void parse(DatagramPacket datagramPacket) {
             ByteArrayInputStream bais = new ByteArrayInputStream(buffered);
             DataInputStream dis = new DataInputStream(bais);
+            // 消息体的类型，在Message接口中定义
             int messageType = 0;
             
+            // 每个数据包的前32位是消息体的类别，获取后赋值给变量messageType
             try {
                 messageType = dis.readInt();
             } catch (IOException e) {
@@ -124,6 +172,7 @@ System.out.println("Connect to server and get a id:" + id);
             }
             
             Message message = null;
+            // 根据消息体类别调用各自的解析方法
             switch (messageType) {
                 case Message.TANK_NEW_MESSAGE:
                     message = new TankNewMessage(twc);

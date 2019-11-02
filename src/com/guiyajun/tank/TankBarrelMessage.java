@@ -29,7 +29,7 @@ import java.net.InetSocketAddress;
  * @Version:      [v1.0]
  */
 public class TankBarrelMessage implements Message {
-    private int messageType = Message.TANK_MOVE_MESSAGE;
+    private int messageType = Message.TANK_BARREL_MESSAGE;
     private int UDPServerPort;
     private String serverIP;
     public Tank myTank = null;
@@ -84,7 +84,27 @@ public class TankBarrelMessage implements Message {
 
     @Override
     public void parse(DataInputStream dis) {
-        
+        try {
+            int id = dis.readInt();
+            if (myTank != null && id == myTank.id) {
+                return;
+            }
+            int x = dis.readInt();
+            int y = dis.readInt();
+            Direction dirOfBarrel = Direction.values()[dis.readInt()];
+            
+            for (int i=0; i<twc.tanks.size(); i++) {
+                MyTank tank = twc.tanks.get(i);
+                if (tank.id == id) {
+                    tank.dirOfBarrel = dirOfBarrel;
+                    tank.x = x;
+                    tank.y = y;
+                    break;
+                }
+            }
+            
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
-
 }

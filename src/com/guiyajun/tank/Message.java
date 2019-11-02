@@ -15,7 +15,7 @@ import java.net.DatagramSocket;
  * @ProjectName:  [TankWar_NET] 
  * @Package:      [com.guiyajun.tank.Message.java]  
  * @ClassName:    [Message]   
- * @Description:  [一句话描述该类的功能]   
+ * @Description:  [所有消息的接口]   
  * @Author:       [桂亚君]   
  * @CreateDate:   [2019年10月28日 下午9:52:15]   
  * @UpdateUser:   [桂亚君]   

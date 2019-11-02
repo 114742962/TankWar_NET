@@ -50,6 +50,7 @@ public class NetServer {
     boolean start = false;
     
     public void start() {
+        // 当start()被调用时改变，用于是否开始接受TCP客户端的连接
         start = true;
         ServerSocket ss = null;
         DataInputStream dis = null;
@@ -61,10 +62,14 @@ System.out.println("The TCPServer is start at port:" + TCPServerPort);
                 Socket socket = ss.accept();
 System.out.println("A client is connect!" + socket.getInetAddress() + ":" + socket.getPort());
                 dis = new DataInputStream(socket.getInputStream());
+                // 读取客户端的UDP端口号
                 int udpPort = dis.readInt();
+                // 获取到客户端的IP地址
                 String clientIPAdress = socket.getInetAddress().getHostAddress();
+                // 将新加入的客户端加入到集合中
                 clients.add(new Client(clientIPAdress, udpPort));
                 dos  = new DataOutputStream(socket.getOutputStream());
+                // 分配一个ID号给客户端的坦克
                 dos.writeInt(id++);
                 dos.flush();
                 
@@ -143,6 +148,7 @@ System.out.println("A client is connect!" + socket.getInetAddress() + ":" + sock
                 datagramPacket = new DatagramPacket(buffered, buffered.length);
                 while (datagramSocket != null) {
                     datagramSocket.receive(datagramPacket);
+                    // 将服务端接收到的消息转发给每一个连接中的客户端
                     for (int i=0; i<clients.size(); i++) {
                         Client c = clients.get(i);
                         datagramPacket.setSocketAddress(new InetSocketAddress(c.ip, c.udpPort));

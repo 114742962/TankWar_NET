@@ -106,7 +106,6 @@ public class TankNewMessage implements Message{
         try {
             int id = dis.readInt();
             if (twc.myTank != null && id == twc.myTank.id) {
-System.out.println("1");                
                 return;
             }
             int x = dis.readInt();
@@ -126,7 +125,6 @@ System.out.println("1");
             if (exists == false) {
                 Message message = new TankNewMessage(twc.myTank);
                 twc.netClient.send(message);
-System.out.println("Got a Tank_new_message from server!");
 System.out.println("messageType:" + messageType + "-id:" + id + "-x:" + x + "-y:" + y 
     + "-dir:" + dir + "-friendly:" + friendly);
                 

@@ -136,6 +136,7 @@ public class Tank {
         if (dir != Direction.STOP) {
             dirOfBarrel = dir;
         }
+        
         if (twc.netClient != null) {
             TankBarrelMessage tankBarrelMessage = new TankBarrelMessage(twc.myTank);
             twc.netClient.send(tankBarrelMessage);
